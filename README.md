@@ -1,6 +1,6 @@
-# ESP32 Bike Computer
+# ESP32 Bike Black-Box
 
-ESP32-based bike computer with GPS tracking, Hall sensor speed measurement, MPU6050 tilt sensing, OLED display output, and a Flask web dashboard.
+ESP32-based bike Black-Box with GPS tracking, Hall sensor speed measurement, MPU6050 tilt sensing, OLED display output, and a Flask web dashboard.
 
 ## Overview
 This project combines embedded firmware, a local Python server, and a browser interface.
