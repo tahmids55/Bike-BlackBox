@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bike Computer</title>
+  <meta name="description"
+    content="Real-time bike telemetry dashboard – GPS tracking, speed monitoring, and accident detection">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0a0a1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css?v=12">
+</head>
+
+<body>
+
+  <!-- ── Status Bar ── -->
+  <header class="status-bar" id="status-bar">
+    <div class="connection-status">
+      <span class="pulse-dot" id="pulse-dot"></span>
+      <span id="connection-text">Connecting…</span>
+    </div>
+    <div class="safety-badge" id="safety-badge">
+      <span class="safety-icon">🟢</span>
+      <span class="safety-text" id="safety-text">SAFE</span>
+    </div>
+  </header>
+
+  <!-- ── Accident Alert Modal ── -->
+  <div class="accident-modal" id="accident-modal">
+    <div class="accident-content">
+      <div class="accident-icon">🚨</div>
+      <h2>ACCIDENT DETECTED</h2>
+      <p>Emergency alert sent via Telegram</p>
+      <div class="accident-location" id="accident-location"></div>
+      <button class="btn-dismiss" id="dismiss-accident">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- ── Main Content ── -->
+  <main class="content">
+
+    <!-- Dashboard -->
+    {% include 'sections/dashboard.html' %}
+
+    <!-- Map -->
+    {% include 'sections/map.html' %}
+
+    <!-- Display Control -->
+    {% include 'sections/display.html' %}
+
+    <!-- Stats -->
+    {% include 'sections/stats.html' %}
+
+    <!-- Log -->
+    {% include 'sections/log.html' %}
+
+  </main>
+
+  <!-- ── Bottom Navigation ── -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="nav-item active" data-screen="dashboard" id="nav-dashboard">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Dashboard</span>
+    </button>
+    <button class="nav-item" data-screen="map" id="nav-map">
+      <span class="nav-icon">🗺️</span>
+      <span class="nav-label">Map</span>
+    </button>
+    <button class="nav-item" data-screen="display" id="nav-display">
+      <span class="nav-icon">📟</span>
+      <span class="nav-label">Display</span>
+    </button>
+    <button class="nav-item" data-screen="stats" id="nav-stats">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Stats</span>
+    </button>
+    <button class="nav-item" data-screen="log" id="nav-log">
+      <span class="nav-icon">📜</span>
+      <span class="nav-label">Log</span>
+    </button>
+  </nav>
+
+  <!-- ── Scripts ── -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="/static/js/gauges.js"></script>
+  <script src="/static/js/map.js"></script>
+  <script src="/static/js/display-control.js"></script>
+  <script src="/static/js/app.js?v=6"></script>
+</body>
+
+</html>

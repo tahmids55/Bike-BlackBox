@@ -1,0 +1,51 @@
+    <section class="screen" id="screen-display">
+      <h2 class="screen-title">📟 Display Control</h2>
+
+      <div class="glass-card oled-preview-card">
+        <div class="oled-label">Live OLED Preview</div>
+        <canvas id="oled-canvas" width="256" height="128"></canvas>
+      </div>
+
+      <div class="template-grid">
+        <div class="template-card active" data-template="default">
+          <div class="template-icon">📊</div>
+          <div class="template-name">Full Info</div>
+        </div>
+        <div class="template-card" data-template="speed_only">
+          <div class="template-icon">⚡</div>
+          <div class="template-name">Speed Only</div>
+        </div>
+        <div class="template-card" data-template="gps_only">
+          <div class="template-icon">🛰️</div>
+          <div class="template-name">GPS Only</div>
+        </div>
+        <div class="template-card" data-template="minimal">
+          <div class="template-icon">◻️</div>
+          <div class="template-name">Minimal</div>
+        </div>
+        <div class="template-card" data-template="custom">
+          <div class="template-icon">✏️</div>
+          <div class="template-name">Custom</div>
+        </div>
+        <div class="template-card" data-template="off">
+          <div class="template-icon">🔌</div>
+          <div class="template-name">Off</div>
+        </div>
+      </div>
+
+      <div class="control-group" id="custom-message-group" style="display:none">
+        <label class="control-label">Custom Message</label>
+        <div class="input-group">
+          <input type="text" id="custom-message" placeholder="Type a message…" maxlength="21" class="input-glass">
+          <button id="send-message" class="btn-primary">Send</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Brightness</label>
+        <div class="slider-group">
+          <input type="range" id="brightness-slider" min="0" max="255" value="255" class="slider">
+          <span class="slider-value" id="brightness-value">100%</span>
+        </div>
+      </div>
+    </section>

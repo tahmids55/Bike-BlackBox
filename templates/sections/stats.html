@@ -1,0 +1,64 @@
+    <section class="screen" id="screen-stats">
+      <h2 class="screen-title">📊 Trip Statistics</h2>
+
+      <div class="stats-grid">
+        <div class="glass-card stat-card">
+          <div class="stat-icon">🕐</div>
+          <div class="info-val" id="trip-duration">00:00:00</div>
+          <div class="info-lbl">Duration</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon">📏</div>
+          <div class="info-val" id="trip-distance">0.00 km</div>
+          <div class="info-lbl">Distance</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon">🏎️</div>
+          <div class="info-val" id="max-speed">0.0 km/h</div>
+          <div class="info-lbl">Max GPS Speed</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="info-val" id="avg-speed">0.0 km/h</div>
+          <div class="info-lbl">Avg Speed</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon">⚡</div>
+          <div class="info-val" id="max-hall-speed">0.0 km/h</div>
+          <div class="info-lbl">Max Speed</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-icon">🚨</div>
+          <div class="info-val" id="accident-count">0</div>
+          <div class="info-lbl">Accidents</div>
+        </div>
+      </div>
+
+      <button class="btn-reset" id="reset-trip">🔄 Reset Trip</button>
+
+      <hr class="divider">
+      <h3 class="screen-title" style="margin-top: 15px; font-size: 1.1rem; justify-content: space-between;">
+        <span>📅 7-Day History</span>
+        <div class="history-controls">
+          <input type="date" id="history-filter-date" class="input-glass" style="padding: 6px; font-size: 0.8rem; width: 140px;">
+          <button id="btn-filter-history" class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 4px;">Filter</button>
+        </div>
+      </h3>
+      
+      <div class="glass-card log-container" style="max-height: 40vh; overflow-y: auto; margin-top: 10px;">
+        <table class="log-table" id="history-table">
+          <thead>
+            <tr>
+              <th style="text-align: left;">Time</th>
+              <th>GPS Spd</th>
+              <th>Act Spd</th>
+              <th>Coords</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody">
+            <!-- Rows dynamically inserted here -->
+            <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Loading history...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>

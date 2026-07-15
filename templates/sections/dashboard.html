@@ -1,0 +1,43 @@
+    <section class="screen active" id="screen-dashboard">
+      <div class="gauges-container">
+        <div class="glass-card gauge-card" id="hall-gauge-card" style="display: none;">
+          <div class="gauge-wrapper" id="hall-gauge"></div>
+          <div class="gauge-label">⚡ Speed</div>
+        </div>
+        <div class="glass-card gauge-card" id="gps-gauge-card">
+          <div class="gauge-wrapper" id="gps-gauge"></div>
+          <div class="gauge-label">🛰️ GPS</div>
+        </div>
+      </div>
+
+      <div class="speed-source-toggle" style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="source-btn active" id="btn-gps-source">🛰️ GPS Speed</button>
+        <button class="source-btn" id="btn-hall-source">⚡ Speed</button>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-cell">
+          <span class="info-val" id="tilt-value">0°</span>
+          <span class="info-lbl">Tilt Angle</span>
+        </div>
+        <div class="info-cell">
+          <span class="info-val" id="accel-value">0.00g</span>
+          <span class="info-lbl">Acceleration</span>
+        </div>
+        <div class="info-cell">
+          <span class="info-val" id="rpm-value">0</span>
+          <span class="info-lbl">RPM</span>
+        </div>
+        <div class="info-cell">
+          <span class="info-val" id="sats-value">0</span>
+          <span class="info-lbl">Satellites</span>
+        </div>
+      </div>
+
+      <div class="glass-card mini-map-container" style="display: none;">
+        <div class="mini-map-overlay">
+          <span>📍</span> <span id="coords-text">Waiting for GPS…</span>
+        </div>
+        <div id="mini-map"></div>
+      </div>
+    </section>
