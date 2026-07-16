@@ -1,6 +1,9 @@
 """
 Bike Computer – Flask Server with WebSocket + Telegram Alerts
 """
+import gevent.monkey
+gevent.monkey.patch_all()
+
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_socketio import SocketIO
 from datetime import datetime
@@ -13,7 +16,7 @@ import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'bike-computer-2026'
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # ==================== Configuration ====================
 TELEGRAM_BOT_TOKEN = "8995507243:AAFsRcJeDsz8Xqnf-M6CjSvpr8WLR-aoKp8"
@@ -30,6 +33,8 @@ telemetry = {
     "esp32_connected": False,
     "last_seen": None
 }
+
+accident_lock = False
 
 display_config = {
     "template": "default",
@@ -52,6 +57,7 @@ trip_stats = {
 
 HISTORY_FILE = "history_7days.json"
 last_history_save = 0
+recent_logs = []
 
 def load_history():
     if os.path.exists(HISTORY_FILE):
@@ -190,6 +196,7 @@ def get_history():
 
 @app.route('/update', methods=['POST'])
 def update():
+    global accident_lock
     """Receive telemetry from ESP32 (GPS + Hall + MPU)."""
     data = request.get_json()
     if not data:
@@ -210,25 +217,45 @@ def update():
     # Trust the ESP32's status – it has persistence logic for accident detection
     # The server should not override with instant threshold checks
     status = data.get('status', 'safe')
+    
+    if status == 'accident':
+        accident_lock = True
+        
+    if accident_lock:
+        status = 'accident'
+
     old_status = telemetry['status']
     telemetry['status'] = status
 
-    update_trip(telemetry['lat'], telemetry['lng'],
-                telemetry['gps_speed'], telemetry['hall_speed'])
+    if not accident_lock:
+        update_trip(telemetry['lat'], telemetry['lng'],
+                    telemetry['gps_speed'], telemetry['hall_speed'])
+        
+        recent_logs.insert(0, {
+            "timestamp": telemetry['timestamp'],
+            "gps_speed": telemetry['gps_speed'],
+            "hall_speed": telemetry['hall_speed'],
+            "tilt_angle": telemetry['tilt_angle'],
+            "total_accel": telemetry['total_accel']
+        })
+        if len(recent_logs) > 50:
+            recent_logs.pop()
 
     socketio.emit('telemetry_update', {**telemetry, 'trip': trip_stats_summary()})
     if status != old_status:
         socketio.emit('status_change', {"status": status})
 
-    print(f"[{telemetry['timestamp']}] GPS:{telemetry['gps_speed']:.1f} "
-          f"Hall:{telemetry['hall_speed']:.1f} Tilt:{telemetry['tilt_angle']:.0f}° "
-          f"Acc:{telemetry['total_accel']:.2f}g  [{status.upper()}]")
+    if not accident_lock:
+        print(f"[{telemetry['timestamp']}] GPS:{telemetry['gps_speed']:.1f} "
+              f"Hall:{telemetry['hall_speed']:.1f} Tilt:{telemetry['tilt_angle']:.0f}° "
+              f"Acc:{telemetry['total_accel']:.2f}g  [{status.upper()}]")
 
     return jsonify({"status": "ok", "display": display_config})
 
 
 @app.route('/accident', methods=['POST'])
 def accident():
+    global accident_lock
     """Receive accident alert → Telegram + WebSocket."""
     data = request.get_json() or {}
     lat = data.get('lat', telemetry['lat'])
@@ -236,6 +263,7 @@ def accident():
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     maps_link = f"https://maps.google.com/?q={lat},{lng}"
 
+    accident_lock = True
     telemetry['status'] = 'accident'
     trip_stats['accident_count'] += 1
 
@@ -257,6 +285,16 @@ def accident():
 
     print(f"*** ACCIDENT ALERT *** {lat:.6f},{lng:.6f}")
     return jsonify({"status": "alert_sent"})
+
+
+@app.route('/recover', methods=['POST'])
+def recover():
+    global accident_lock
+    accident_lock = False
+    telemetry['status'] = 'safe'
+    socketio.emit('telemetry_update', {**telemetry, 'trip': trip_stats_summary()})
+    socketio.emit('status_change', {"status": "safe"})
+    return jsonify({"status": "recovered"})
 
 
 @app.route('/display', methods=['GET'])
@@ -285,6 +323,8 @@ def latest():
 
 @app.route('/trip/reset', methods=['POST'])
 def reset_trip():
+    global recent_logs
+    recent_logs = []
     trip_stats.update({
         "distance_km": 0.0, "max_gps_speed": 0.0, "max_hall_speed": 0.0,
         "speed_sum": 0.0, "speed_count": 0, "accident_count": 0,
@@ -299,6 +339,7 @@ def reset_trip():
 def on_connect():
     socketio.emit('telemetry_update', {**telemetry, 'trip': trip_stats_summary()})
     socketio.emit('display_changed', display_config)
+    socketio.emit('recent_logs', recent_logs)
 
 
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -307,4 +348,4 @@ if __name__ == '__main__':
     print("  🏍️  Bike Computer Server")
     print("  http://0.0.0.0:5000")
     print("=" * 50)
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True, allow_unsafe_werkzeug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)

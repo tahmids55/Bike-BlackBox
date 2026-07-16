@@ -57,6 +57,7 @@
       if (target === 'dashboard') {
         miniMap.resize();
       }
+      localStorage.setItem('activeBikeTab', target);
     });
   });
 
@@ -177,8 +178,20 @@
       }
     }
 
+    // Update Recover Button Visuals
+    const recoverBtn = document.getElementById('btn-recover-bike');
+    if (recoverBtn) {
+      if (data.status === 'accident') {
+        recoverBtn.classList.add('active-accident');
+        recoverBtn.innerHTML = '🚨 Recover Bike (Resume Logging)';
+      } else {
+        recoverBtn.classList.remove('active-accident');
+        recoverBtn.innerHTML = '✅ Logging Active (Safe)';
+      }
+    }
+
     // Update 5-min Log
-    if (logTbody && data.esp32_connected) {
+    if (logTbody && data.esp32_connected && data.status !== 'accident') {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${data.timestamp}</td>
@@ -211,6 +224,29 @@
   socket.on('disconnect', () => {
     pulseDot.classList.remove('connected');
     connText.textContent = 'Server Disconnected';
+  });
+
+  socket.on('recent_logs', (logs) => {
+    if (!logTbody) return;
+    logTbody.innerHTML = '';
+    logs.forEach(log => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${log.timestamp}</td>
+        <td>${(log.gps_speed || 0).toFixed(1)}</td>
+        <td>${(log.hall_speed || 0).toFixed(1)}</td>
+        <td>${(log.rpm || 0).toFixed(0)}</td>
+        <td>${(log.tilt_angle || 0).toFixed(0)}°</td>
+        <td>${(log.total_accel || 0).toFixed(2)}g</td>
+        <td>${log.satellites || 0}</td>
+        <td style="font-size: 0.65rem;">
+          <a href="https://maps.google.com/?q=${log.lat},${log.lng}" target="_blank" style="color: var(--accent-cyan); text-decoration: none;">
+            ${(log.lat || 0).toFixed(5)}, ${(log.lng || 0).toFixed(5)}
+          </a>
+        </td>
+      `;
+      logTbody.appendChild(tr);
+    });
   });
 
   socket.on('telemetry_update', (data) => {
@@ -247,6 +283,16 @@
   if (dismissBtn) {
     dismissBtn.addEventListener('click', () => {
       accidentModal.classList.remove('active');
+    });
+  }
+
+  // ── Recover Bike ──
+  const recoverBtn = $('#btn-recover-bike');
+  if (recoverBtn) {
+    recoverBtn.addEventListener('click', () => {
+      fetch('/recover', { method: 'POST' })
+        .then(() => console.log('Bike recovered, logging resumed.'))
+        .catch(e => console.error('Recover failed:', e));
     });
   }
 
@@ -330,6 +376,18 @@
   setTimeout(fetchHistory, 500);
 
   // ── Init ──
-  document.addEventListener('DOMContentLoaded', initComponents);
-  if (document.readyState !== 'loading') initComponents();
+  function startup() {
+    if (window._bikeAppStarted) return;
+    window._bikeAppStarted = true;
+    initComponents();
+    
+    const savedTab = localStorage.getItem('activeBikeTab');
+    if (savedTab) {
+      const btn = $(`#nav-${savedTab}`);
+      if (btn) btn.click();
+    }
+  }
+  
+  document.addEventListener('DOMContentLoaded', startup);
+  if (document.readyState !== 'loading') startup();
 })();

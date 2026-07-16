@@ -292,6 +292,29 @@ input[type=range]::-webkit-slider-thumb:active { transform: scale(0.9); }
 .btn-reset:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
 .btn-reset:active { background: rgba(255, 255, 255, 0.05); transform: scale(0.98); }
 
+/* ── Recover Button ── */
+.btn-recover {
+  background: rgba(255, 255, 255, 0.05); 
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted); 
+  padding: 12px; 
+  border-radius: 8px; 
+  width: 100%;
+  font-family: var(--font-main); 
+  font-weight: 500; 
+  cursor: pointer; 
+  transition: all 0.3s;
+  margin-bottom: 20px;
+}
+.btn-recover:hover { background: rgba(255, 255, 255, 0.1); }
+.btn-recover.active-accident {
+  background-color: var(--danger-color);
+  color: white;
+  border-color: var(--danger-color);
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
 .divider { border: 0; height: 1px; background: rgba(255,255,255,0.1); margin: 30px 0; }
 .history-controls { display: flex; gap: 8px; align-items: center; }
 
