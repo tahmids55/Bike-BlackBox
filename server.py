@@ -346,6 +346,9 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 if __name__ == '__main__':
     print("=" * 50)
     print("  🏍️  Bike Computer Server")
-    print("  http://0.0.0.0:5000")
+    print("  Base URL:     https://resultmaker.alpine-terrapin.ts.net:8443")
+    print("  Update URL:   https://resultmaker.alpine-terrapin.ts.net:8443/update")
+    print("  Accident URL: https://resultmaker.alpine-terrapin.ts.net:8443/accident")
+    print("  Display URL:  https://resultmaker.alpine-terrapin.ts.net:8443/display")
     print("=" * 50)
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=8088, debug=True)

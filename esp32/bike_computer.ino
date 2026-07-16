@@ -6,8 +6,8 @@
 #include <ArduinoJson.h>
 
 //WiFi
-const char* ssid     = "LSH_515";
-const char* password = "87827446";
+const char* ssid     = "TIGER";
+const char* password = "sul2207011";
 
 //Server
 const char* serverBase  = "http://192.168.0.50:5000";
@@ -132,7 +132,7 @@ bool initOLED() {
   return false;
 }
 
-// ── MPU6050 init ─────────────────────────────────────────
+//MPU6050 init
 bool initMPU() {
   // Reset
   Wire.beginTransmission(MPU_ADDR);
@@ -140,18 +140,18 @@ bool initMPU() {
   if (Wire.endTransmission() != 0) return false;
   delay(150);
 
-  // Wake
+  //Wake
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x6B); Wire.write(0x00);
   if (Wire.endTransmission() != 0) return false;
   delay(50);
 
-  // ±8 g range (4096 LSB/g) – less vibration sensitivity
+  //±8 g range (4096 LSB/g) 
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x1C); Wire.write(0x10);
   if (Wire.endTransmission() != 0) return false;
 
-  // Low-pass filter: ~44 Hz (reduces vibration noise)
+  //Low-pass filter: 44 Hz 
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x1A); Wire.write(0x03);
   Wire.endTransmission();
@@ -160,12 +160,12 @@ bool initMPU() {
   return true;
 }
 
-// ─────────────────────────────────────────────────────────
+
 void setup() {
   Serial.begin(115200);
   delay(100);
 
-  // ── OLED first (shows boot progress) ──
+  //OLED
   oledOK = initOLED();
   if (oledOK) {
     display.clearDisplay();
@@ -175,7 +175,7 @@ void setup() {
     display.display();
   }
 
-  // ── WiFi (non-blocking wait, max 12 s) ──
+  //WiFi
   WiFi.begin(ssid, password);
   unsigned long wifiStart = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - wifiStart < 12000) {
@@ -184,17 +184,17 @@ void setup() {
   bool wifiConnected = (WiFi.status() == WL_CONNECTED);
   Serial.println(wifiConnected ? "WiFi OK" : "WiFi FAILED");
 
-  // ── Hall sensor ──
+  //Hall sensor
   pinMode(hallPin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(hallPin), hallISR, FALLING);
 
-  // ── GPS ──
+  //GPS
   gpsSerial.begin(9600, SERIAL_8N1, 16, 17);
 
-  // ── MPU6050 (Wire already up from OLED init) ──
+  //MPU6050 
   mpuOK = initMPU();
 
-  // ── Boot screen ──
+  //Boot screen
   if (oledOK) {
     display.clearDisplay();
     display.setTextSize(1);
@@ -210,7 +210,6 @@ void setup() {
   }
 }
 
-// ─────────────────────────────────────────────────────────
 void loop() {
   unsigned long now = millis();
 
@@ -227,7 +226,7 @@ void loop() {
     calcHallSpeed(now);
   }
 
-  // 4. Schedule HTTP jobs (only one at a time, WiFi permitting)
+  //4. HTTP jobs
   if (WiFi.status() == WL_CONNECTED && pendingJob == JOB_NONE) {
     if (now - lastTelemetrySend >= TELEMETRY_INTERVAL) {
       pendingJob = JOB_TELEMETRY;
@@ -236,25 +235,24 @@ void loop() {
     }
   }
 
-  // 5. Execute one HTTP job per loop pass
+  //5.Execute one HTTP job per loop pass
   if (pendingJob != JOB_NONE) {
     executeHttpJob();
   }
 
-  // 6. Accident display timeout
+  //6.Accident display timeout
   if (accidentActive && now >= accidentDisplayUntil) {
     accidentActive = false;
-    // Only clear to safe if we're truly not fallen
     if (tiltAngle <= WARNING_TILT) bikeStatus = "safe";
   }
 
-  // 7. OLED update
+  //7.OLED update
   if (oledOK && now - lastOLEDUpdate >= OLED_INTERVAL) {
     lastOLEDUpdate = now;
     renderDisplay();
   }
 
-  // 8. Passive WiFi reconnect
+  //8.WiFi reconnect
   if (now - lastWifiCheck >= WIFI_CHECK_INTERVAL) {
     lastWifiCheck = now;
     if (WiFi.status() != WL_CONNECTED) {
@@ -263,7 +261,7 @@ void loop() {
   }
 }
 
-// ─────────────────────────────────────────────────────────
+
 void calcHallSpeed(unsigned long now) {
   noInterrupts();
   unsigned long intv       = pulseInterval;
@@ -279,10 +277,9 @@ void calcHallSpeed(unsigned long now) {
   }
 }
 
-// ─────────────────────────────────────────────────────────
 void readMPU() {
   if (!mpuOK) {
-    // Attempt MPU re-init once in a while if it failed
+    //Attempt MPU re-init once in a while if it failed
     static unsigned long lastMpuRetry = 0;
     if (millis() - lastMpuRetry > 5000) {
       lastMpuRetry = millis();
@@ -296,8 +293,8 @@ void readMPU() {
   uint8_t err = Wire.endTransmission(false);
   if (err != 0) {
     mpuOK = false;
-    Serial.printf("MPU I2C err: %d – will retry\n", err);
-    // Attempt bus recovery
+    Serial.printf("MPU I2C err: %d  will retry\n", err);
+    //Attempt bus recovery
     i2cRecovery();
     Wire.begin(21, 22);
     Wire.setClock(100000);
@@ -320,7 +317,7 @@ void readMPU() {
   tiltAngle = acosf(clamped) * (180.0f / PI);
   mpuOK = true;
 
-  // ── Accident state machine ──
+  //Accident state machine
   unsigned long now  = millis();
   bool isFallen  = (tiltAngle >= TILT_THRESHOLD);
   bool isTilted  = (tiltAngle >= WARNING_TILT);
@@ -329,7 +326,7 @@ void readMPU() {
     if (tiltStartTime == 0) tiltStartTime = now;
   } else {
     tiltStartTime = 0;
-    // Reset per-accident message counter only once fully upright
+    //Reset per-accident message counter only once fully upright
     if (!isTilted) accidentMsgCount = 0;
   }
 
@@ -354,8 +351,7 @@ void readMPU() {
   }
 }
 
-// ─────────────────────────────────────────────────────────
-//  Builds telemetry JSON into a fixed buffer (no heap alloc)
+//  Builds telemetry JSON into a fixed buffer
 void buildTelemetryJson(char* buf, size_t len) {
   float gpsSpd = gps.location.isValid() ? gps.speed.kmph() : 0.0f;
   double lat   = gps.location.isValid() ? gps.location.lat() : 0.0;
@@ -371,13 +367,10 @@ void buildTelemetryJson(char* buf, size_t len) {
   );
 }
 
-// ─────────────────────────────────────────────────────────
 void applyDisplayConfig(const char* jsonStr) {
   StaticJsonDocument<256> doc;
   if (deserializeJson(doc, jsonStr) != DeserializationError::Ok) return;
 
-  // /update wraps config under "display"; /display returns it flat
-  // Split into if/else to avoid ArduinoJson v7 ternary type mismatch
   JsonVariant root;
   if (doc.containsKey("display"))
     root = doc["display"].as<JsonVariant>();
@@ -389,7 +382,7 @@ void applyDisplayConfig(const char* jsonStr) {
   if (root.containsKey("custom_message")) customMessage     = root["custom_message"].as<String>();
 }
 
-// ─────────────────────────────────────────────────────────
+
 void executeHttpJob() {
   HTTPClient http;
   char buf[320];
@@ -439,7 +432,6 @@ void executeHttpJob() {
   pendingJob = JOB_NONE;
 }
 
-// ─────────────────────────────────────────────────────────
 void renderDisplay() {
   if (currentTemplate == "off") {
     display.clearDisplay();
@@ -452,7 +444,7 @@ void renderDisplay() {
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
 
-  // ── default ──────────────────────────────────────────────
+  // default 
   if (currentTemplate == "default") {
     display.setCursor(0, 0);
     display.printf("RPM:%.0f  %.1fkm/h", rpm, hallSpeedKmh);
@@ -477,7 +469,7 @@ void renderDisplay() {
     display.printf("[%s]", bikeStatus.c_str());
   }
 
-  // ── speed_only ───────────────────────────────────────────
+  // speed_only
   else if (currentTemplate == "speed_only") {
     display.setTextSize(3);
     display.setCursor(10, 5);
@@ -489,7 +481,7 @@ void renderDisplay() {
     display.printf("GPS: %.1f km/h", gps.location.isValid() ? gps.speed.kmph() : 0.0f);
   }
 
-  // ── gps_only ─────────────────────────────────────────────
+  // gps_only 
   else if (currentTemplate == "gps_only") {
     if (gps.location.isValid()) {
       display.setCursor(0, 0);  display.printf("Lat: %.6f", gps.location.lat());
@@ -502,7 +494,7 @@ void renderDisplay() {
     }
   }
 
-  // ── minimal ──────────────────────────────────────────────
+  // minimal 
   else if (currentTemplate == "minimal") {
     display.setTextSize(4);
     display.setCursor(15, 8);
@@ -511,7 +503,7 @@ void renderDisplay() {
     display.setCursor(48, 50); display.print("km/h");
   }
 
-  // ── custom ───────────────────────────────────────────────
+  // custom 
   else if (currentTemplate == "custom") {
     display.setTextSize(2);
     int msgLen = customMessage.length();
@@ -520,7 +512,7 @@ void renderDisplay() {
     display.print(customMessage);
   }
 
-  // ── Accident overlay (drawn on top of any template) ──────
+  //Accident overlay
   if (accidentActive) {
     display.fillRect(0, 48, 128, 16, SH110X_WHITE);
     display.setTextColor(SH110X_BLACK);
